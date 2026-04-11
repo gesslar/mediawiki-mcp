@@ -39,9 +39,6 @@ class MediaWikiMCPServer {
     this.wikiUrl = this.wikiUrl.replace(/\/$/, "")
     this.apiUrl = `${this.wikiUrl}/api.php`
 
-    console.error(`MediaWiki URL: ${this.wikiUrl}`)
-    console.error(`Bot username: ${this.botUsername}`)
-
     this.setupTools()
   }
 
@@ -298,8 +295,20 @@ class MediaWikiMCPServer {
           }
         }
 
+        const stripTags = s => {
+          let prev
+          let curr = s
+
+          do {
+            prev = curr
+            curr = curr.replace(/<[^<>]*>/g, "")
+          } while(curr !== prev)
+
+          return curr
+        }
+
         const formatted = results.map((r, i) =>
-          `${i + 1}. ${r.title}\n   Snippet: ${r.snippet.replace(/<[^>]+>/g, "")}`
+          `${i + 1}. ${r.title}\n   Snippet: ${stripTags(r.snippet)}`
         ).join("\n\n")
 
         return {
