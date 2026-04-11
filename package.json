@@ -12,12 +12,11 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "types:build": "tsc -p tsconfig.types.json",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "submit": "npm publish --access public",
+    "submit": "npm publish --access public --//registry.npmjs.org/:_authToken=\"${NPM_ACCESS_TOKEN}\"",
     "update": "npx npm-check-updates -u && npm install",
-    "pr": "gt submit --publish --restack --ai -m",
+    "pr": "gt submit --ai -p",
     "patch": "npm version patch",
     "minor": "npm version minor",
     "major": "npm version major"
@@ -46,7 +45,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@gesslar/uglier": "^2.4.0",
+    "@gesslar/uglier": "^2.4.1",
     "eslint": "^10.2.0"
   }
 }
