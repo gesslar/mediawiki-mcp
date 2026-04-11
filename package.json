@@ -1,0 +1,50 @@
+{
+  "name": "@gesslar/mediawiki-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Integrating with MediaWiki",
+  "main": "src/index.js",
+  "type": "module",
+  "bin": {
+    "mediawiki-mcp": "./src/index.js"
+  },
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "submit": "npm publish --access public --//registry.npmjs.org/:_authToken=\"${NPM_ACCESS_TOKEN}\"",
+    "update": "npx npm-check-updates -u && npm install",
+    "pr": "gt submit --ai -p",
+    "patch": "npm version patch",
+    "minor": "npm version minor",
+    "major": "npm version major"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gesslar/mediawiki-mcp.git"
+  },
+  "keywords": [
+    "wiki",
+    "mediawiki",
+    "mcp",
+    "model-context-protocol",
+    "janet",
+    "jackson",
+    "was",
+    "played"
+  ],
+  "author": "gesslar",
+  "license": "0BSD",
+  "homepage": "https://github.com/gesslar/mediawiki-mcp#readme",
+  "dependencies": {
+    "@gesslar/wikid": "^2.3.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@gesslar/uglier": "^2.4.1",
+    "eslint": "^10.2.0"
+  }
+}
