@@ -36,6 +36,14 @@ The server is configured through environment variables:
 All three variables are required. The server will exit on startup if any are
 missing.
 
+> **Note:** The server currently authenticates all reads and writes
+> (`private: true` on the underlying `Wikid` client). This is intentional for
+> wikis that require authentication for read access. If you're pointing this at
+> a fully public wiki, reads will still work — they'll just be authenticated
+> when they wouldn't strictly need to be. This package is released under
+> [0BSD](LICENSE.txt), so if the hardcoded behaviour doesn't suit your setup,
+> you're welcome to fork it and tweak the `Wikid` constructor options to taste.
+
 ## Usage with an MCP client
 
 Add the server to your MCP client configuration. For example, in a Claude

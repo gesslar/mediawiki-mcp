@@ -37,7 +37,6 @@ class MediaWikiMCPServer {
 
     // Normalize URL (remove trailing slash)
     this.wikiUrl = this.wikiUrl.replace(/\/$/, "")
-    this.apiUrl = `${this.wikiUrl}/api.php`
 
     this.setupTools()
   }
