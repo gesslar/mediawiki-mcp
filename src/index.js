@@ -56,7 +56,12 @@ class MediaWikiMCPServer {
         private: true // Your wiki requires auth for reads
       })
 
-      this.#client = await client.login()
+      const loginResult = await client.login()
+
+      if(!loginResult.ok)
+        throw new Error(`Login failed: ${loginResult.error?.message ?? "unknown error"}`)
+
+      this.#client = client
     }
 
     return this.#client
@@ -241,7 +246,18 @@ class MediaWikiMCPServer {
           }
         }
 
-        const content = page.revisions[0].slots.main["*"]
+        const content = page.revisions?.[0]?.slots?.main?.["*"] ?? ""
+
+        if(!content) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Article "${title}" exists but has no readable content.`,
+              },
+            ],
+          }
+        }
 
         return {
           content: [
