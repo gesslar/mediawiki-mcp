@@ -115,7 +115,7 @@ class MediaWikiMCPServer {
 
     this.server.registerTool("mediawiki_edit_article", {
       description:
-        "Edit an existing article on the MediaWiki instance. Can create a new article if it doesn't exist (use createonly=false).",
+        "Edit an existing article on the MediaWiki instance. Creates the article if it does not already exist.",
       inputSchema: z.object({
         title: z.string().describe("Title of the article to edit"),
         content: z.string().describe("New wikitext content for the article"),
