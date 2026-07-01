@@ -15,7 +15,7 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "submit": "npm publish --access public --//registry.npmjs.org/:_authToken=\"${NPM_ACCESS_TOKEN}\"",
-    "update": "npx npm-check-updates -u && npm install",
+    "update": "npx -y npm-check-updates -u && npm install",
     "pr": "gt submit --ai -p",
     "patch": "npm version patch",
     "minor": "npm version minor",
@@ -41,10 +41,10 @@
   "dependencies": {
     "@gesslar/wikid": "^2.3.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@gesslar/uglier": "^2.4.1",
-    "eslint": "^10.2.0"
+    "eslint": "^10.6.0"
   }
 }
