@@ -83,7 +83,8 @@ Create a new article. Fails if the article already exists.
 
 ### `mediawiki_edit_article`
 
-Edit an existing article. Supports full replacement, append, or prepend.
+Edit an existing article. Supports full replacement, append, or prepend, of
+either the whole page or a single section.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -92,6 +93,12 @@ Edit an existing article. Supports full replacement, append, or prepend.
 | `summary` | string | no | Edit summary |
 | `append` | boolean | no | Append `content` instead of replacing |
 | `prepend` | boolean | no | Prepend `content` instead of replacing |
+| `section` | number \| `"new"` | no | Edit only this section (`0` is the lead); `"new"` adds a section at the end |
+| `sectiontitle` | string | no | Heading for the new section when `section` is `"new"` |
+
+When `section` is a number, `content` replaces that section, including its
+heading line. Section editing keeps request bodies small, which matters on
+wikis behind a firewall that limits POST body size.
 
 ### `mediawiki_delete_article`
 
@@ -109,6 +116,16 @@ Return the current wikitext content of an article.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `title` | string | yes | Title of the article to retrieve |
+| `section` | number | no | Return only this section (`0` is the lead) |
+
+### `mediawiki_get_sections`
+
+List an article's sections with their numbers, for use with the `section`
+parameter above.
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `title` | string | yes | Title of the article |
 
 ### `mediawiki_search`
 

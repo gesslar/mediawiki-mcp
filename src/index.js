@@ -114,15 +114,21 @@ class MediaWikiMCPServer {
 
     this.server.registerTool("mediawiki_edit_article", {
       description:
-        "Edit an existing article on the MediaWiki instance. Creates the article if it does not already exist.",
+        "Edit an existing article on the MediaWiki instance. Creates the article if it does not already exist. " +
+        "Pass `section` to edit a single section instead of the whole page; use mediawiki_get_sections to find section numbers.",
       inputSchema: z.object({
         title: z.string().describe("Title of the article to edit"),
-        content: z.string().describe("New wikitext content for the article"),
+        content: z.string().describe("New wikitext content for the article, or for the section when `section` is given (include the section's heading line)"),
         summary: z.string().optional().describe("Edit summary (reason for the edit)"),
         append: z.boolean().optional().describe("If true, append content instead of replacing. Default: false"),
         prepend: z.boolean().optional().describe("If true, prepend content instead of replacing. Default: false"),
+        section: z.union([z.number().int().min(0), z.literal("new")]).optional()
+          .describe("Section to edit: 0 for the lead, 1+ for numbered sections, or \"new\" to add a new section at the end. Omit to edit the whole page"),
+        sectiontitle: z.string().optional().describe("Heading for the new section when `section` is \"new\""),
       }),
-    }, async({title, content, summary, append, prepend}) => {
+    }, async({
+      title, content, summary, append, prepend, section, sectiontitle
+    }) => {
       try {
         await this.#assureClient()
 
@@ -140,10 +146,29 @@ class MediaWikiMCPServer {
         else
           editParams.text = content
 
+        if(section !== undefined)
+          editParams.section = String(section)
+
+        if(sectiontitle)
+          editParams.sectiontitle = sectiontitle
+
         const result = await this.#client.post("api.php", editParams)
 
         if(result.edit?.result !== "Success")
           throw new Error(`Edit failed: ${JSON.stringify(result)}`)
+
+        const where = section === undefined ? "" : ` (section ${section})`
+
+        if("nochange" in result.edit) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `✓ No change to article "${title}"${where}; content was identical, so no revision was made`,
+              },
+            ],
+          }
+        }
 
         const action = result.edit.new ? "created" : "edited"
 
@@ -151,7 +176,7 @@ class MediaWikiMCPServer {
           content: [
             {
               type: "text",
-              text: `✓ Successfully ${action} article "${title}"\nRevision ID: ${result.edit.newrevid}\nTimestamp: ${result.edit.newtimestamp}`,
+              text: `✓ Successfully ${action} article "${title}"${where}\nRevision ID: ${result.edit.newrevid}\nTimestamp: ${result.edit.newtimestamp}`,
             },
           ],
         }
@@ -213,22 +238,29 @@ class MediaWikiMCPServer {
 
     this.server.registerTool("mediawiki_get_article", {
       description:
-        "Get the current content of an article from the MediaWiki instance.",
+        "Get the current content of an article from the MediaWiki instance, optionally just one section.",
       inputSchema: z.object({
         title: z.string().describe("Title of the article to retrieve"),
+        section: z.number().int().min(0).optional()
+          .describe("Section number to retrieve (0 for the lead). Omit for the whole page"),
       }),
-    }, async({title}) => {
+    }, async({title, section}) => {
       try {
         await this.#assureClient()
 
-        const data = await this.#client.get("api.php", {
+        const params = {
           action: "query",
           titles: title,
           prop: "revisions",
           rvprop: "content",
           rvslots: "main",
           format: "json"
-        })
+        }
+
+        if(section !== undefined)
+          params.rvsection = section
+
+        const data = await this.#client.get("api.php", params)
 
         const pages = data.query.pages
         const pageId = Object.keys(pages)[0]
@@ -245,7 +277,12 @@ class MediaWikiMCPServer {
           }
         }
 
-        const content = page.revisions?.[0]?.slots?.main?.["*"] ?? ""
+        const slot = page.revisions?.[0]?.slots?.main
+
+        if(slot && "nosuchsection" in slot)
+          throw new Error(`Article "${title}" has no section ${section}.`)
+
+        const content = slot?.["*"] ?? ""
 
         if(!content) {
           return {
@@ -262,7 +299,67 @@ class MediaWikiMCPServer {
           content: [
             {
               type: "text",
-              text: `Content of "${title}":\n\n${content}`,
+              text: `Content of "${title}"${section === undefined ? "" : ` (section ${section})`}:\n\n${content}`,
+            },
+          ],
+        }
+      } catch(error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error.message}`,
+            },
+          ],
+          isError: true,
+        }
+      }
+    })
+
+    this.server.registerTool("mediawiki_get_sections", {
+      description:
+        "List the sections of an article with their numbers, for use with the `section` parameter of mediawiki_get_article and mediawiki_edit_article.",
+      inputSchema: z.object({
+        title: z.string().describe("Title of the article"),
+      }),
+    }, async({title}) => {
+      try {
+        await this.#assureClient()
+
+        const data = await this.#client.get("api.php", {
+          action: "parse",
+          page: title,
+          prop: "sections",
+          format: "json"
+        })
+
+        if(!data.parse)
+          throw new Error(`Parse failed: ${JSON.stringify(data)}`)
+
+        // Sections pulled in from templates (index "T-n") cannot be edited
+        // through this page.
+        const sections = data.parse.sections.filter(s => /^\d+$/.test(s.index))
+
+        if(sections.length === 0) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Article "${title}" has no sections; only section 0 (the whole page) exists.`,
+              },
+            ],
+          }
+        }
+
+        const formatted = sections.map(s =>
+          `${s.index}. ${"  ".repeat(Math.max(0, Number(s.level) - 2))}${s.line}`
+        ).join("\n")
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Sections of "${title}" (0 is the lead before the first heading):\n\n${formatted}`,
             },
           ],
         }
