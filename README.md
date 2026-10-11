@@ -96,8 +96,10 @@ either the whole page or a single section.
 | `section` | number \| `"new"` | no | Edit only this section (`0` is the lead); `"new"` adds a section at the end |
 | `sectiontitle` | string | no | Heading for the new section when `section` is `"new"` |
 
-When `section` is a number, `content` replaces that section, including its
-heading line. Section editing keeps request bodies small, which matters on
+When `section` is a number, `content` replaces that section and must include
+its heading line. With `section: "new"`, `content` is the body only; the
+heading comes from `sectiontitle`. With `append` or `prepend`, `content` is
+just the text to add. Section editing keeps request bodies small, which matters on
 wikis behind a firewall that limits POST body size.
 
 ### `mediawiki_delete_article`

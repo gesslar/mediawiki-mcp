@@ -118,7 +118,12 @@ class MediaWikiMCPServer {
         "Pass `section` to edit a single section instead of the whole page; use mediawiki_get_sections to find section numbers.",
       inputSchema: z.object({
         title: z.string().describe("Title of the article to edit"),
-        content: z.string().describe("New wikitext content for the article, or for the section when `section` is given (include the section's heading line)"),
+        content: z.string().describe(
+          "Wikitext to write. By default it replaces the whole page. " +
+          "With a numbered `section`, it replaces that section and must include the section's heading line. " +
+          "With `section: \"new\"`, it is the new section's body; the heading comes from `sectiontitle`. " +
+          "With `append` or `prepend`, it is only the text to add."
+        ),
         summary: z.string().optional().describe("Edit summary (reason for the edit)"),
         append: z.boolean().optional().describe("If true, append content instead of replacing. Default: false"),
         prepend: z.boolean().optional().describe("If true, prepend content instead of replacing. Default: false"),
