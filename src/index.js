@@ -6,6 +6,13 @@ import {StdioServerTransport} from "@modelcontextprotocol/sdk/server/stdio.js"
 import * as z from "zod/v4"
 import pkg from "../package.json" with {type: "json"}
 
+// Section numbers also accept digit strings, for clients that send "2"
+// instead of 2.
+const sectionNumber = z.union([
+  z.number().int().min(0),
+  z.string().regex(/^\d+$/).transform(Number),
+])
+
 class MediaWikiMCPServer {
   #client
 
@@ -127,7 +134,7 @@ class MediaWikiMCPServer {
         summary: z.string().optional().describe("Edit summary (reason for the edit)"),
         append: z.boolean().optional().describe("If true, append content instead of replacing. Default: false"),
         prepend: z.boolean().optional().describe("If true, prepend content instead of replacing. Default: false"),
-        section: z.union([z.number().int().min(0), z.literal("new")]).optional()
+        section: z.union([sectionNumber, z.literal("new")]).optional()
           .describe("Section to edit: 0 for the lead, 1+ for numbered sections, or \"new\" to add a new section at the end. Omit to edit the whole page"),
         sectiontitle: z.string().optional().describe("Heading for the new section when `section` is \"new\""),
       }),
@@ -246,7 +253,7 @@ class MediaWikiMCPServer {
         "Get the current content of an article from the MediaWiki instance, optionally just one section.",
       inputSchema: z.object({
         title: z.string().describe("Title of the article to retrieve"),
-        section: z.number().int().min(0).optional()
+        section: sectionNumber.optional()
           .describe("Section number to retrieve (0 for the lead). Omit for the whole page"),
       }),
     }, async({title, section}) => {
